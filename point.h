@@ -42,3 +42,12 @@ struct Point
 		return os << "(" << p.x << "," << p.y << ")";
     }
 };
+
+class Range
+{
+    public:
+        Point lower_bound;
+        Point upper_bound;
+
+        Range(Point lower_bound, Point upper_bound) : lower_bound(lower_bound), upper_bound(upper_bound) {}
+};

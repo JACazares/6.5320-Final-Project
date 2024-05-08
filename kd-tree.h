@@ -39,15 +39,6 @@ class KDNode
 
 };
 
-class Range
-{
-    public:
-        Point lower_bound;
-        Point upper_bound;
-
-        Range(Point lower_bound, Point upper_bound) : lower_bound(lower_bound), upper_bound(upper_bound) {}
-};
-
 void build_kd_tree(vector<pair<Point, int>> points_sorted_x, vector<pair<Point, int>> points_storted_y, int depth, KDNode* root)
 {
     int N = (int)points_sorted_x.size();
@@ -125,11 +116,8 @@ void build_kd_tree(vector<pair<Point, int>> points_sorted_x, vector<pair<Point, 
             index_in_left[points_storted_y[j].second] = 0;
     }
 
-    #pragma omp parallel
-    {
-        build_kd_tree(left_child_points_sorted_x, left_child_points_sorted_y, depth + 1, root -> left_child);
-        build_kd_tree(right_child_points_sorted_x, right_child_points_sorted_y, depth + 1, root -> right_child);
-    }
+    build_kd_tree(left_child_points_sorted_x, left_child_points_sorted_y, depth + 1, root -> left_child);
+    build_kd_tree(right_child_points_sorted_x, right_child_points_sorted_y, depth + 1, root -> right_child);
 
     vector<pair<Point, int>>().swap(left_child_points_sorted_x);
     vector<pair<Point, int>>().swap(right_child_points_sorted_x);
