@@ -49,6 +49,8 @@
         "variant": "cpp",
         "vector": "cpp",
         "algorithm": "cpp",
-        "charconv": "cpp"
+        "charconv": "cpp",
+        "fstream": "cpp",
+        "iomanip": "cpp"
     }
 }

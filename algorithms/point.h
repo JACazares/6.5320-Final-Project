@@ -8,7 +8,7 @@
 using std::vector;
 
 const double INF = 1e9;
-const int num_dimensions = 3;
+const int num_dimensions = 2;
 
 struct Point
 {
@@ -52,7 +52,6 @@ class Range
         Range() : lower_bound(Point()), upper_bound(Point()) {}
         Range(Point lower_bound, Point upper_bound) : lower_bound(lower_bound), upper_bound(upper_bound) {}
 };
-
 
 bool totally_contained(const Range r1, const Range r2)
 {

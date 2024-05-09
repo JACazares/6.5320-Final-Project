@@ -1,0 +1,16 @@
+N,Algorithm,Sorting Time (us),Build Time (us)
+1000,Brute force,0,0
+1000,KD-tree,3871,9063
+1000,Range tree,1000,307304
+3000,Brute force,0,0
+3000,KD-tree,10470,26882
+3000,Range tree,2835,1491198
+9000,Brute force,0,0
+9000,KD-tree,37153,89323
+9000,Range tree,10577,6563833
+27000,Brute force,0,0
+27000,KD-tree,122305,306576
+27000,Range tree,31814,28902417
+81000,Brute force,0,0
+81000,KD-tree,426014,1081123
+81000,Range tree,106165,124406566
