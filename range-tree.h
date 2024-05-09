@@ -46,20 +46,22 @@ void build_range_tree(vector<Point> points, int recursion_depth, RTNode* root)
     if(N == 1)
     {
         // cout << recursion_depth << " " << points[0] << "\n";
-        if(recursion_depth == 1)
+        if(recursion_depth == num_dimensions - 1)
         {
             root -> point = points[0];
             root -> is_leaf = true;
-            root -> split_coordinate = points[0].y;
+            root -> split_coordinate = points[0].coordinates[recursion_depth];
             return;
         }
         else
         {
-            root -> split_coordinate = points[0].x;
-            vector<Point> points_sorted_y = points;
-            std::sort(points_sorted_y.begin(), points_sorted_y.end(), [](Point a, Point b) { return (a.y < b.y ? 1 : (a.y == b.y ? a.x < b.x : 0)); });
-            root -> associated_node = new RTNode(points.front().y, points.back().y);
-            build_range_tree(points_sorted_y, recursion_depth + 1, root -> associated_node);
+            root -> split_coordinate = points[0].coordinates[recursion_depth];
+            vector<Point> points_sorted = points;
+            std::sort(points_sorted.begin(), points_sorted.end(), [recursion_depth](Point a, Point b) -> bool {
+                return (a.coordinates[recursion_depth + 1] < b.coordinates[recursion_depth + 1]);
+            });
+            root -> associated_node = new RTNode(points_sorted.front().coordinates[recursion_depth + 1], points_sorted.back().coordinates[recursion_depth + 1]);
+            build_range_tree(points_sorted, recursion_depth + 1, root -> associated_node);
             return;
         }
     }
@@ -74,24 +76,9 @@ void build_range_tree(vector<Point> points, int recursion_depth, RTNode* root)
     root -> left_child = new RTNode(root);
     root -> right_child = new RTNode(root);
 
-    if(recursion_depth == 0)
-    {
-        root -> split_coordinate = right_points.front().x;
-        root -> left_child -> upper_bound = left_points.back().x;
-        root -> right_child -> lower_bound = right_points.front().x;
-    }
-    else if (recursion_depth == 1)
-    {
-        root -> split_coordinate = right_points.front().y;
-        root -> left_child -> upper_bound = left_points.back().y;
-        root -> right_child -> lower_bound = right_points.front().y;
-    }
-    
-    // cout << recursion_depth << ": " << root -> lower_bound << " " << root -> upper_bound << "\n";
-    // for(auto i : points)
-    //     cout << i << " ";
-    // cout << "\n";
-    // cout << root -> left_child << " " << root -> right_child << "\n";
+    root -> split_coordinate = right_points.front().coordinates[recursion_depth];
+    root -> left_child -> upper_bound = left_points.back().coordinates[recursion_depth];
+    root -> right_child -> lower_bound = right_points.front().coordinates[recursion_depth];
 
     build_range_tree(left_points, recursion_depth, root -> left_child);
     build_range_tree(right_points, recursion_depth, root -> right_child);
@@ -99,67 +86,56 @@ void build_range_tree(vector<Point> points, int recursion_depth, RTNode* root)
     vector<Point>().swap(left_points);
     vector<Point>().swap(right_points);
 
-    if(recursion_depth < 1)
+    if(recursion_depth < num_dimensions - 1)
     {
-        // NOTE: O(n lg^2 n)
-        vector<Point> points_sorted_y = points;
-        std::sort(points_sorted_y.begin(), points_sorted_y.end(), [](Point a, Point b) { return (a.y < b.y ? 1 : (a.y == b.y ? a.x < b.x : 0)); });
-        root -> associated_node = new RTNode(points.front().y, points.back().y);
-        build_range_tree(points_sorted_y, recursion_depth + 1, root -> associated_node);
+        // NOTE: O(n lg^d n)
+        root -> split_coordinate = points[0].coordinates[recursion_depth];
+        vector<Point> points_sorted = points;
+        std::sort(points_sorted.begin(), points_sorted.end(), [recursion_depth](Point a, Point b) -> bool {
+            return (a.coordinates[recursion_depth + 1] < b.coordinates[recursion_depth + 1]);
+        });
+        root -> associated_node = new RTNode(points_sorted.front().coordinates[recursion_depth + 1], points_sorted.back().coordinates[recursion_depth + 1]);
+        build_range_tree(points_sorted, recursion_depth + 1, root -> associated_node);
+        return;
     }
-
 }
 
 int rt_iterations = 0;
 
 vector<Point> search_range_tree(Range search_range, int recursion_depth, RTNode* root)
 {
+    rt_iterations++;
     if(root == nullptr)
         return vector<Point>();
 
-    // cout << recursion_depth << " " << root -> lower_bound << " " << root -> upper_bound << "\n";
-    rt_iterations++;
-    if(recursion_depth == 0)
+    if(root -> is_leaf)
     {
-        if(root -> upper_bound < search_range.lower_bound.x
-            || search_range.upper_bound.x < root -> lower_bound)
+        // cout << "l " << root -> point << "\n";
+        if(search_range.lower_bound.coordinates[recursion_depth] <= root -> point.coordinates[recursion_depth]
+            && root -> point.coordinates[recursion_depth] <= search_range.upper_bound.coordinates[recursion_depth])
+            return {root -> point};
+        else
             return vector<Point>();
+    }
+    // cout << recursion_depth << ", " << root -> lower_bound << " " << root -> upper_bound << "\n";
 
-        if(search_range.lower_bound.x <= root -> lower_bound
-            && root -> upper_bound <= search_range.upper_bound.x)
+    if(root -> upper_bound < search_range.lower_bound.coordinates[recursion_depth]
+        || search_range.upper_bound.coordinates[recursion_depth] < root -> lower_bound)
+        return vector<Point>();
+
+    if(recursion_depth < num_dimensions - 1)
+    {
+        if(search_range.lower_bound.coordinates[recursion_depth] <= root -> lower_bound
+            && root -> upper_bound <= search_range.upper_bound.coordinates[recursion_depth])
         {
             // cout << "inside\n";
             return search_range_tree(search_range, recursion_depth + 1, root -> associated_node);
         }
-        // cout << root -> left_child << " " << root -> right_child << "\n";
-
-        vector<Point> left_child_points = search_range_tree(search_range, recursion_depth, root -> left_child);
-        vector<Point> right_child_points = search_range_tree(search_range, recursion_depth, root -> right_child);
-
-        left_child_points.insert(left_child_points.end(), right_child_points.begin(), right_child_points.end());
-        return left_child_points;
-    }
-    else if(recursion_depth == 1)
-    {
-        if(root -> is_leaf)
-        {
-            if(search_range.lower_bound.y <= root -> point.y
-                && root -> point.y <= search_range.upper_bound.y)
-                return {root -> point};
-            else
-                return vector<Point>();
-        }
-
-        if(root -> upper_bound < search_range.lower_bound.y
-            || search_range.upper_bound.y < root -> lower_bound)
-            return vector<Point>();
-
-        vector<Point> left_child_points = search_range_tree(search_range, recursion_depth, root -> left_child);
-        vector<Point> right_child_points = search_range_tree(search_range, recursion_depth, root -> right_child);
-
-        left_child_points.insert(left_child_points.end(), right_child_points.begin(), right_child_points.end());
-        return left_child_points;
     }
 
-    return vector<Point>();
+    vector<Point> left_child_points = search_range_tree(search_range, recursion_depth, root -> left_child);
+    vector<Point> right_child_points = search_range_tree(search_range, recursion_depth, root -> right_child);
+
+    left_child_points.insert(left_child_points.end(), right_child_points.begin(), right_child_points.end());
+    return left_child_points;
 }
