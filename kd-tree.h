@@ -6,6 +6,8 @@
 #include <iostream>
 
 #define pb push_back
+// #define here(i) std::cout << "here " << i << "\n";
+#define here(i)
 
 using std::vector;
 using std::pair;
@@ -45,10 +47,6 @@ class KDNode
 void build_kd_tree(vector<vector<pair<Point, int>>> points_sorted, int depth, KDNode* root)
 {
     int N = (int)points_sorted[0].size();
-    // cout << N << "\n";
-    // for(auto i : points_sorted_x)
-    //     cout << "(" << i.first << ", " << i.second << ")" << " ";
-    // cout << "\n";
     if(N == 1)
     {
         root -> point = points_sorted[0][0].first;
@@ -77,27 +75,62 @@ void build_kd_tree(vector<vector<pair<Point, int>>> points_sorted, int depth, KD
     for(int i = N/2; i < N; i++)
         right_child_points_sorted[current_coordinate_index].pb(points_sorted[current_coordinate_index][i]);
     
+    // for(int d = 0; d < num_dimensions; d++)
+    // {
+    //     for(int i = 0; i < N; i++)
+    //         cout << points_sorted[d][i].first << " ";    
+    //     cout << "\n";
+    // }
     for(int d = 0; d < num_dimensions; d++)
     {
         if(d == current_coordinate_index)
             continue;
+        // cout << d << "\n";
         for(int j = 0; j < N; j++)
         {
+            // cout << points_sorted[d][j].first << " ";
             if(index_in_left[points_sorted[d][j].second])
                 left_child_points_sorted[d].pb(points_sorted[d][j]);
             else
                 right_child_points_sorted[d].pb(points_sorted[d][j]);
         }
+        // cout << "\n";
+        here(0.5)
 
         root -> left_child -> upper_bound.coordinates[d] = root -> split_coordinate;
         root -> right_child -> lower_bound.coordinates[d] = root -> split_coordinate;
+        here(0.5)
 
-        for(int i = 0; i < N/2; i++)
-            index_in_left[points_sorted[d][i].second] = 0;
     }
+
+    for(int i = 0; i < N/2; i++)
+        index_in_left[points_sorted[current_coordinate_index][i].second] = 0;
+
+    here(1);
+    // for(int d = 0; d < num_dimensions; d++)
+    // {
+    //     for(int i = 0; i < N; i++)
+    //         cout << points_sorted[d][i].first << " ";    
+    //     cout << "\n";
+    // }
+    // cout << "\n";
+
+    // cout << left_child_points_sorted.size() << "\n";
+    // for(int d = 0; d < num_dimensions; d++)
+    // {
+    //     cout << left_child_points_sorted[d].size() << ": ";
+    //     for(auto p : left_child_points_sorted[d])
+    //         cout << p.first << " ";
+    //     // for(int i = 0; i < N; i++)
+    //     //     cout << left_child_points_sorted[d][i].first << " ";    
+    //     cout << "\n";
+    // }
+    // cout << "\n";
     
     build_kd_tree(left_child_points_sorted, depth + 1, root -> left_child);
+    here(2);
     build_kd_tree(right_child_points_sorted, depth + 1, root -> right_child);
+    here(3);
 
     vector<vector<pair<Point, int>>>().swap(left_child_points_sorted);
     vector<vector<pair<Point, int>>>().swap(right_child_points_sorted);
