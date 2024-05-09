@@ -1,47 +1,45 @@
 #include <cmath>
 #include <iostream>
+#include <vector>
+#include <cassert>
+#define assertm(exp, msg) assert(((void)msg, exp))
 #pragma once
 
+using std::vector;
+
 const double INF = 1e9;
+const int num_dimensions = 2;
 
 struct Point
 {
-    double x, y;
+    vector<double> coordinates = vector<double>(num_dimensions, 0);
+
     Point() {}
-    Point(double x, double y) : x(x), y(y) {}
-    double distance(const Point &p) const
+    Point(vector<double> coordinates)
     {
-        return sqrt((x - p.x) * (x - p.x) + (y - p.y) * (y - p.y));
+        assertm(coordinates.size() == num_dimensions, "Invalid number of dimensions");
+        this -> coordinates = coordinates;
     }
 
     bool operator==(const Point &p) const
     {
-        return x == p.x && y == p.y;
-    }
-
-    bool operator<(const Point &p) const
-    {
-        return x < p.x || (x == p.x && y < p.y);
-    }
-
-    bool operator>(const Point &p) const
-    {
-        return x > p.x || (x == p.x && y > p.y);
-    }
-
-    bool operator<=(const Point &p) const
-    {
-        return x < p.x || (x == p.x && y <= p.y);
-    }
-
-    bool operator>=(const Point &p) const
-    {
-        return x > p.x || (x == p.x && y >= p.y);
+        for(int i = 0; i < num_dimensions; i++)
+            if(coordinates[i] != p.coordinates[i])
+                return false;
+        return true;
     }
 
     friend std::ostream& operator<<(std::ostream& os, Point p)
     {
-		return os << "(" << p.x << "," << p.y << ")";
+		os << "(";
+        for(int i = 0; i < num_dimensions; i++)
+        {
+            os << p.coordinates[i];
+            if(i != num_dimensions - 1)
+                os << ", ";
+        }
+        os << ")";
+        return os;
     }
 };
 
@@ -51,5 +49,6 @@ class Range
         Point lower_bound;
         Point upper_bound;
 
+        Range() : lower_bound(Point()), upper_bound(Point()) {}
         Range(Point lower_bound, Point upper_bound) : lower_bound(lower_bound), upper_bound(upper_bound) {}
 };

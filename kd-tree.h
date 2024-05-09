@@ -1,9 +1,9 @@
+#include "point.h"
 #include <vector>
 #include <algorithm>
 #include <cmath>
 #include <unordered_map>
 #include <iostream>
-#include "point.h"
 
 #define pb push_back
 
@@ -15,8 +15,8 @@ using std::cout;
 class KDNode
 {
     public:
-        Point lower_bound = Point(-INF, -INF);
-        Point upper_bound = Point(INF, INF);
+        Point lower_bound;
+        Point upper_bound;
         KDNode* left_child = nullptr;
         KDNode* right_child = nullptr;
 
@@ -25,8 +25,13 @@ class KDNode
 
         KDNode()
         {
-            lower_bound = Point(-INF, -INF);
-            upper_bound = Point(INF, INF);
+            lower_bound = Point();
+            for(int i = 0; i < num_dimensions; i++)
+                lower_bound.coordinates[i] = -INF;
+
+            upper_bound = Point();
+            for(int i = 0; i < num_dimensions; i++)
+                upper_bound.coordinates[i] = INF;
         }
 
         KDNode(KDNode* parent)
@@ -37,94 +42,87 @@ class KDNode
 
 };
 
-void build_kd_tree(vector<pair<Point, int>> points_sorted_x, vector<pair<Point, int>> points_storted_y, int depth, KDNode* root)
+void build_kd_tree(vector<vector<pair<Point, int>>> points_sorted, int depth, KDNode* root)
 {
-    int N = (int)points_sorted_x.size();
+    int N = (int)points_sorted[0].size();
     // cout << N << "\n";
     // for(auto i : points_sorted_x)
     //     cout << "(" << i.first << ", " << i.second << ")" << " ";
     // cout << "\n";
     if(N == 1)
     {
-        root -> point = points_sorted_x[0].first;
+        root -> point = points_sorted[0][0].first;
         root -> left_child = nullptr;
         root -> right_child = nullptr;
         return;
     }
 
-    vector<pair<Point, int>> left_child_points_sorted_x;
-    vector<pair<Point, int>> right_child_points_sorted_x;
-    vector<pair<Point, int>> left_child_points_sorted_y;
-    vector<pair<Point, int>> right_child_points_sorted_y;
+    vector<vector<pair<Point, int>>> left_child_points_sorted(num_dimensions, vector<pair<Point, int>>());
+    vector<vector<pair<Point, int>>> right_child_points_sorted(num_dimensions, vector<pair<Point, int>>());
+
     unordered_map<int, bool> index_in_left;
 
     root -> left_child = new KDNode(root);
     root -> right_child = new KDNode(root);
 
-    if(depth % 2 == 0)
-    {
-        root -> split_coordinate = points_sorted_x[N/2].first.x;
+    int current_coordinate_index = depth % num_dimensions;
 
-        for(int i = 0; i < N/2; i++)
-        {
-            index_in_left[points_sorted_x[i].second] = 1;
-            left_child_points_sorted_x.pb(points_sorted_x[i]);
-        }
-        for(int i = N/2; i < N; i++)
-            right_child_points_sorted_x.pb(points_sorted_x[i]);
-        
+    root -> split_coordinate = points_sorted[current_coordinate_index][N/2].first.coordinates[current_coordinate_index];
+    
+    for(int i = 0; i < N/2; i++)
+    {
+        index_in_left[points_sorted[current_coordinate_index][i].second] = 1;
+        left_child_points_sorted[current_coordinate_index].pb(points_sorted[current_coordinate_index][i]);
+    }
+    for(int i = N/2; i < N; i++)
+        right_child_points_sorted[current_coordinate_index].pb(points_sorted[current_coordinate_index][i]);
+    
+    for(int d = 0; d < num_dimensions; d++)
+    {
+        if(d == current_coordinate_index)
+            continue;
         for(int j = 0; j < N; j++)
         {
-            if(index_in_left[points_storted_y[j].second])
-                left_child_points_sorted_y.pb(points_storted_y[j]);
+            if(index_in_left[points_sorted[d][j].second])
+                left_child_points_sorted[d].pb(points_sorted[d][j]);
             else
-                right_child_points_sorted_y.pb(points_storted_y[j]);
+                right_child_points_sorted[d].pb(points_sorted[d][j]);
         }
 
-        root -> left_child -> upper_bound.x = root -> split_coordinate;
-        root -> right_child -> lower_bound.x = root -> split_coordinate;
+        root -> left_child -> upper_bound.coordinates[d] = root -> split_coordinate;
+        root -> right_child -> lower_bound.coordinates[d] = root -> split_coordinate;
 
         for(int i = 0; i < N/2; i++)
-            index_in_left[points_sorted_x[i].second] = 0;
+            index_in_left[points_sorted[d][i].second] = 0;
     }
-    else
-    {
-        root -> split_coordinate = points_storted_y[N/2].first.y;
+    
+    build_kd_tree(left_child_points_sorted, depth + 1, root -> left_child);
+    build_kd_tree(right_child_points_sorted, depth + 1, root -> right_child);
 
-        for(int j = 0; j < N/2; j++)
-        {
-            index_in_left[points_storted_y[j].second] = 1;
-            left_child_points_sorted_y.pb(points_storted_y[j]);
-        }
-        for(int j = N/2; j < N; j++)
-            right_child_points_sorted_y.pb(points_storted_y[j]);
-        
-        for(int i = 0; i < N; i++)
-        {
-            if(index_in_left[points_sorted_x[i].second])
-                left_child_points_sorted_x.pb(points_sorted_x[i]);
-            else
-                right_child_points_sorted_x.pb(points_sorted_x[i]);
-        }
-
-        root -> left_child -> upper_bound.y = root -> split_coordinate;
-        root -> right_child -> lower_bound.y = root -> split_coordinate;
-        
-        for(int j = 0; j < N/2; j++)
-            index_in_left[points_storted_y[j].second] = 0;
-    }
-
-    build_kd_tree(left_child_points_sorted_x, left_child_points_sorted_y, depth + 1, root -> left_child);
-    build_kd_tree(right_child_points_sorted_x, right_child_points_sorted_y, depth + 1, root -> right_child);
-
-    vector<pair<Point, int>>().swap(left_child_points_sorted_x);
-    vector<pair<Point, int>>().swap(right_child_points_sorted_x);
-    vector<pair<Point, int>>().swap(left_child_points_sorted_y);
-    vector<pair<Point, int>>().swap(right_child_points_sorted_y); 
+    vector<vector<pair<Point, int>>>().swap(left_child_points_sorted);
+    vector<vector<pair<Point, int>>>().swap(right_child_points_sorted);
     unordered_map<int, bool>().swap(index_in_left);
 }
 
 int kd_iterations = 0;
+
+bool totally_contained(const Range r1, const Range r2)
+{
+    for(int i = 0; i < num_dimensions; i++)
+        if(r1.upper_bound.coordinates[i] < r2.lower_bound.coordinates[i]
+            || r2.upper_bound.coordinates[i] < r1.lower_bound.coordinates[i])
+            return false;
+    return true;
+}
+
+bool totally_outside(const Range r1, const Range r2)
+{
+    for(int i = 0; i < num_dimensions; i++)
+        if(r1.upper_bound.coordinates[i] <= r2.lower_bound.coordinates[i]
+            || r1.lower_bound.coordinates[i] > r2.upper_bound.coordinates[i])
+            return true;
+    return false;
+}
 
 vector<Point> search_kd_tree(const Range search_range, KDNode* root)
 {
@@ -134,18 +132,13 @@ vector<Point> search_kd_tree(const Range search_range, KDNode* root)
     
     if(root -> left_child == nullptr && root -> right_child == nullptr)
     {
-        
-        if(search_range.lower_bound.x <= root -> point.x
-            && root -> point.x <= search_range.upper_bound.x
-            && search_range.lower_bound.y <= root -> point.y
-            && root -> point.y <= search_range.upper_bound.y)
+        if(totally_contained(Range(root -> point, root -> point), search_range))
             return vector<Point>({Point(root -> point)});
         else
             return vector<Point>();
     }
 
-    if((root -> upper_bound).x <= search_range.lower_bound.x || (root->upper_bound).y <= search_range.lower_bound.y
-        || (root -> lower_bound).x > search_range.upper_bound.x || (root -> lower_bound).y > search_range.upper_bound.y)
+    if(totally_outside(Range(root -> lower_bound, root -> upper_bound), search_range))
         return vector<Point>();
 
     vector<Point> left_child_points = search_kd_tree(search_range, root -> left_child);

@@ -1,9 +1,9 @@
+#include "point.h"
 #include <vector>
 #include <algorithm>
 #include <cmath>
 #include <map>
 #include <iostream>
-#include "point.h"
 
 #define pb push_back
 

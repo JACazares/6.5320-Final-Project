@@ -1,24 +1,48 @@
 #include "kd-tree.h"
-#include "range-tree.h"
+// #include "range-tree.h"
 #include <iostream>
 #include <chrono>
 #include <vector>
+#include <random>
+#include <cassert>
 
 using std::cout;
 using std::vector;
 
-int N = (int)1e7;
-Range search_range = Range(Point(12000, 1567), Point(46000, 27000));
+int N = (int)1e6;
+Range search_range = Range();
+
 vector<Point> points;
 vector<pair<Point, int>> points_with_index;
 
-void kd_test()
+void kd_tree_test()
 {
     KDNode* root = new KDNode();
-
+    vector<vector<pair<Point, int>>> points_sorted(num_dimensions, points_with_index);
+    
     std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
-    build_kd_tree(points_with_index, points_with_index, 0, root);
+    for(int d = 0; d < num_dimensions; d++)
+    {
+        sort(points_sorted[d].begin(), points_sorted[d].end(), [d](pair<Point, int> a, pair<Point, int> b) -> bool
+        {
+            return a.first.coordinates[d] < b.first.coordinates[d];
+        });
+    }
+
+    // for(int d = 0; d < num_dimensions; d++)
+    // {
+    //     for(auto p : points_sorted[d])
+    //         cout << p.first << " ";
+    //     cout << "\n";
+    // }
     std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+    auto sorting_time = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
+
+    cout << "Sorting time: " << sorting_time << "us\n\n";
+
+    begin = std::chrono::steady_clock::now();
+    build_kd_tree(points_sorted, 0, root);
+    end = std::chrono::steady_clock::now();
 
     auto kd_build_time = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
 
@@ -27,30 +51,28 @@ void kd_test()
     end = std::chrono::steady_clock::now();
 
     auto kd_query_time = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
-    cout << "KD size: " << ans.size() << "\n";
 
     int brute_force = 0;
     begin = std::chrono::steady_clock::now();
     for(auto i : points_with_index)
-    {
-        if(search_range.lower_bound.x <= i.first.x
-            && i.first.x <= search_range.upper_bound.x
-            && search_range.lower_bound.y <= i.first.y
-            && i.first.y <= search_range.upper_bound.y)
+        if(totally_contained(Range(i.first, i.first), search_range))
             brute_force++;
-    }
+
     end = std::chrono::steady_clock::now();
     auto brute_force_time = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
-    cout << "Brute force size: " << brute_force << "\n";
 
-    cout << kd_iterations << "\n";
-    cout << N << "\n";
+    assert((int)ans.size() == brute_force);
+    cout << "Points in range: " << brute_force << "\n\n";
 
-    cout << "KD build time: " << kd_build_time << "ms\n";
-    cout << "KD query time: " << kd_query_time << "ms\n";
-    cout << "Brute force time: " << brute_force_time << "ms\n";
+    cout << "KD iterations: " << kd_iterations << "\n";
+    cout << "Brute force iterations: " << N << "\n\n";
+
+    cout << "KD build time: " << kd_build_time << "us\n";
+    cout << "KD query time: " << kd_query_time << "us\n";
+    cout << "Brute force time: " << brute_force_time << "us\n\n";
 }
 
+/*
 void range_tree_test()
 {
     RTNode* root = new RTNode(points.front().x, points.back().x);
@@ -66,7 +88,6 @@ void range_tree_test()
     end = std::chrono::steady_clock::now();
 
     auto rt_query_time = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
-    cout << "RT size: " << ans.size() << "\n";
 
     int brute_force = 0;
     begin = std::chrono::steady_clock::now();
@@ -80,26 +101,46 @@ void range_tree_test()
     }
     end = std::chrono::steady_clock::now();
     auto brute_force_time = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
-    cout << "Brute force size: " << brute_force << "\n\n";
+    assert((int)ans.size() == brute_force);
+    cout << "Points in range: " << brute_force << "\n\n";
 
     cout << "RT iretations: " << rt_iterations << "\n";
     cout << "Brute force iterations: " << N << "\n\n";
 
-    cout << "RT build time: " << rt_build_time << "ms\n";
-    cout << "RT query time: " << rt_query_time << "ms\n";
-    cout << "Brute force time: " << brute_force_time << "ms\n\n";
+    cout << "RT build time: " << rt_build_time << "us\n";
+    cout << "RT query time: " << rt_query_time << "us\n";
+    cout << "Brute force time: " << brute_force_time << "us\n\n";
 
 }
+*/
 
 int main()
 {
+    std::random_device rd;
+    std::mt19937 g(rd());
+
+    vector<vector<double>> coordinates_available(num_dimensions, vector<double>(N, 0));
+    for(int d = 0; d < num_dimensions; d++)
+    {
+        for(int i = 0; i < N; i++)
+            coordinates_available[d][i] = i;
+
+        std::shuffle(coordinates_available[d].begin(), coordinates_available[d].end(), g);
+    }
+
     for(int i = 0; i < N; i++)
     {
-        points.pb(Point(i, i));
-        points_with_index.pb({Point(i, i), i});
+        vector<double> coordinates(num_dimensions, 0);
+        for(int d = 0; d < num_dimensions; d++)
+            coordinates[d] = coordinates_available[d][i];
+
+        points.push_back(Point(coordinates));
+        points_with_index.push_back({Point(coordinates), i});
     }
+
+    search_range = Range(Point(vector<double>(num_dimensions, 0)), Point(vector<double>(num_dimensions, 100000)));
     
-    // kd_tree_test();
-    range_tree_test();
+    kd_tree_test();
+    // range_tree_test();
     return 0;
 }
