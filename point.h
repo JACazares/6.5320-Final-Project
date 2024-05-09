@@ -2,6 +2,8 @@
 #include <iostream>
 #pragma once
 
+const double INF = 1e9;
+
 struct Point
 {
     double x, y;

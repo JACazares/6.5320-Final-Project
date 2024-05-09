@@ -12,8 +12,6 @@ using std::pair;
 using std::unordered_map;
 using std::cout;
 
-const double INF = 1e9;
-
 class KDNode
 {
     public:
