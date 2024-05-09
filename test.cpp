@@ -9,17 +9,34 @@
 using std::cout;
 using std::vector;
 using std::sort;
+using std::pair;
 
-int N = (int)5e4;
-Range search_range = Range();
+int N = (int)1e5;
 
 vector<Point> points;
 vector<pair<Point, int>> points_with_index;
 
-void kd_tree_test()
+vector<long long> brute_force_query(int& brute_force, const Range search_range)
+{
+    std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+    for(auto p : points)
+        if(totally_contained(Range(p, p), search_range))
+            brute_force++;
+
+    std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+    auto brute_force_time = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
+
+    return {N, brute_force_time};
+}
+
+vector<long long> kd_tree_build(kd_tree::KDNode* root)
 {
     vector<vector<pair<Point, int>>> points_sorted(num_dimensions, points_with_index);
-    std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+
+    std::chrono::steady_clock::time_point begin;
+    std::chrono::steady_clock::time_point end;
+
+    begin = std::chrono::steady_clock::now();
     for(int d = 0; d < num_dimensions; d++)
     {
         sort(points_sorted[d].begin(), points_sorted[d].end(), [d](pair<Point, int> a, pair<Point, int> b) -> bool
@@ -27,104 +44,113 @@ void kd_tree_test()
             return a.first.coordinates[d] < b.first.coordinates[d];
         });
     }
-
-    // for(int d = 0; d < num_dimensions; d++)
-    // {
-    //     for(auto p : points_sorted[d])
-    //         cout << p.first << " ";
-    //     cout << "\n";
-    // }
-    std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-    auto sorting_time = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
-
-    cout << "Sorting time: " << sorting_time << "us\n\n";
-
-    KDNode* root = new KDNode();
+    end = std::chrono::steady_clock::now();
+    auto kd_sorting_time = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
 
     begin = std::chrono::steady_clock::now();
-    build_kd_tree(points_sorted, 0, root);
+    kd_tree::build_kd_tree(points_sorted, 0, root);
     end = std::chrono::steady_clock::now();
-
     auto kd_build_time = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
 
-    begin = std::chrono::steady_clock::now();
-    auto ans = search_kd_tree(search_range, root);
-    end = std::chrono::steady_clock::now();
-
-    auto kd_query_time = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
-
-    int brute_force = 0;
-    begin = std::chrono::steady_clock::now();
-    for(auto i : points_with_index)
-        if(totally_contained(Range(i.first, i.first), search_range))
-            brute_force++;
-
-    end = std::chrono::steady_clock::now();
-    auto brute_force_time = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
-
-    assert((int)ans.size() == brute_force);
-    cout << "Points in range: " << brute_force << "\n\n";
-
-    cout << "KD iterations: " << kd_iterations << "\n";
-    cout << "Brute force iterations: " << N << "\n\n";
-
-    cout << "KD build time: " << kd_build_time << "us\n";
-    cout << "KD query time: " << kd_query_time << "us\n";
-    cout << "Brute force time: " << brute_force_time << "us\n\n";
+    return {kd_sorting_time, kd_build_time};
 }
 
-void range_tree_test()
+vector<long long> kd_tree_query(const int brute_force, const Range search_range, const kd_tree::KDNode* root)
 {
+    std::chrono::steady_clock::time_point begin;
+    std::chrono::steady_clock::time_point end;
+
+    begin = std::chrono::steady_clock::now();
+    kd_tree::kd_iterations = 0;
+    auto ans = kd_tree::search_kd_tree(search_range, root);
+    end = std::chrono::steady_clock::now();
+    auto kd_query_time = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
+
+    // cout << (int)ans.size() << " " << brute_force << "\n";
+
+    assert((int)ans.size() == brute_force);
+    return {kd_tree::kd_iterations, kd_query_time};
+}
+
+vector<long long> range_tree_build(range_tree::RTNode* root)
+{
+    std::chrono::steady_clock::time_point begin;
+    std::chrono::steady_clock::time_point end;
+
     vector<Point> points_sorted = points;
-    std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+    begin = std::chrono::steady_clock::now();
     sort(points_sorted.begin(), points_sorted.end(), [](Point a, Point b) -> bool
     {
         return a.coordinates[0] < b.coordinates[0];
     });
+    end = std::chrono::steady_clock::now();
+    auto rt_sorting_time = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
 
-    std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
-    auto sorting_time = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
-
-    cout << "Sorting time: " << sorting_time << "us\n\n";
-
-    // for(auto p : points_sorted)
-    //     cout << p << " ";
-    // cout << "\n";
-
-    RTNode* root = new RTNode(points_sorted.front().coordinates[0], points_sorted.back().coordinates[0]);
+    root -> lower_bound = points_sorted.front().coordinates[0];
+    root -> upper_bound = points_sorted.back().coordinates[0];
 
     begin = std::chrono::steady_clock::now();
     build_range_tree(points_sorted, 0, root);
     end = std::chrono::steady_clock::now();
-
     auto rt_build_time = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
 
+    return {rt_sorting_time, rt_build_time};
+}
+
+vector<long long> range_tree_query(const int brute_force, const Range search_range, const range_tree::RTNode* root)
+{
+    std::chrono::steady_clock::time_point begin;
+    std::chrono::steady_clock::time_point end;
+
     begin = std::chrono::steady_clock::now();
+    range_tree::rt_iterations = 0;
     auto ans = search_range_tree(search_range, 0, root);
     end = std::chrono::steady_clock::now();
 
     auto rt_query_time = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
-
-    int brute_force = 0;
-    begin = std::chrono::steady_clock::now();
-    for(auto p : points)
-    {
-        if(totally_contained(Range(p, p), search_range))
-            brute_force++;
-    }
-
-    end = std::chrono::steady_clock::now();
-    auto brute_force_time = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
     assert((int)ans.size() == brute_force);
-    cout << "Points in range: " << brute_force << "\n\n";
 
-    cout << "RT iretations: " << rt_iterations << "\n";
-    cout << "Brute force iterations: " << N << "\n\n";
+    return {range_tree::rt_iterations, rt_query_time};
+}
 
-    cout << "RT build time: " << rt_build_time << "us\n";
-    cout << "RT query time: " << rt_query_time << "us\n";
-    cout << "Brute force time: " << brute_force_time << "us\n\n";
+void build(kd_tree::KDNode*& kd_root, range_tree::RTNode*& rt_root)
+{
+    kd_root = new kd_tree::KDNode();
+    auto kd_tree_build_results = kd_tree_build(kd_root);
+    cout << "KD-tree build: " << kd_tree_build_results[0] << "us sorting, " << kd_tree_build_results[1] << "us building\n";
 
+    rt_root = new range_tree::RTNode();
+    auto range_tree_build_results = range_tree_build(rt_root);
+    cout << "Range tree build: " << range_tree_build_results[0] << "us sorting, " << range_tree_build_results[1] << "us building\n";
+}
+
+void query(Range search_range, const kd_tree::KDNode* kd_root, const range_tree::RTNode* rt_root)
+{
+    int brute_force = 0;
+    auto brute_force_results = brute_force_query(brute_force, search_range);
+    auto kd_tree_query_results = kd_tree_query(brute_force, search_range, kd_root);
+    auto range_tree_query_results = range_tree_query(brute_force, search_range, rt_root);
+
+    cout << "Found " << brute_force << " points\n";
+    cout << "Brute force query: " << brute_force_results[0] << " iterations in " << brute_force_results[1] << "us\n";
+    cout << "KD-tree query: " << kd_tree_query_results[0] << " iterations in " << kd_tree_query_results[1] << "us\n";
+    cout << "Range tree query: " << range_tree_query_results[0] << " iterations in " << range_tree_query_results[1] << "us\n";
+}
+
+void full_test()
+{
+    kd_tree::KDNode* kd_root = nullptr;
+    range_tree::RTNode* rt_root = nullptr;
+
+    build(kd_root, rt_root);
+
+    Range search_range;
+
+    search_range = Range(Point(vector<double>(num_dimensions, 0)), Point(vector<double>(num_dimensions, 1e4)));
+    query(search_range, kd_root, rt_root);
+
+    search_range = Range(Point(vector<double>(num_dimensions, 2e4)), Point(vector<double>(num_dimensions, 4e4)));
+    query(search_range, kd_root, rt_root);
 }
 
 int main()
@@ -155,9 +181,6 @@ int main()
     //     cout << p << " ";
     // cout << "\n";
 
-    search_range = Range(Point(vector<double>(num_dimensions, 0)), Point(vector<double>(num_dimensions, 1e5)));
-    
-    // kd_tree_test();
-    range_tree_test();
+    full_test();
     return 0;
 }
