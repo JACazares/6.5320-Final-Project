@@ -1,0 +1,61 @@
+N,Algorithm,Points,Iterations,Time (us)
+1000,Brute force,2,1000,298
+1000,KD-tree,2,385,140
+1000,Range tree,2,24,5
+1000,Brute force,2,1000,273
+1000,KD-tree,2,535,180
+1000,Range tree,2,24,4
+1000,Brute force,2,1000,270
+1000,KD-tree,2,577,180
+1000,Range tree,2,24,3
+1000,Brute force,2,1000,272
+1000,KD-tree,2,645,226
+1000,Range tree,2,24,3
+3000,Brute force,2,3000,802
+3000,KD-tree,2,873,299
+3000,Range tree,2,31,4
+3000,Brute force,2,3000,772
+3000,KD-tree,2,1039,375
+3000,Range tree,2,30,5
+3000,Brute force,2,3000,727
+3000,KD-tree,2,1347,461
+3000,Range tree,2,29,4
+3000,Brute force,2,3000,744
+3000,KD-tree,2,1647,534
+3000,Range tree,2,28,3
+9000,Brute force,2,9000,2446
+9000,KD-tree,2,2193,774
+9000,Range tree,2,35,8
+9000,Brute force,2,9000,2524
+9000,KD-tree,2,2535,1002
+9000,Range tree,2,34,6
+9000,Brute force,2,9000,2395
+9000,KD-tree,2,2843,988
+9000,Range tree,2,33,6
+9000,Brute force,2,9000,2324
+9000,KD-tree,2,3477,1148
+9000,Range tree,2,32,5
+27000,Brute force,2,27000,8565
+27000,KD-tree,2,4241,1522
+27000,Range tree,2,34,9
+27000,Brute force,2,27000,8740
+27000,KD-tree,2,5667,1961
+27000,Range tree,2,34,7
+27000,Brute force,2,27000,9696
+27000,KD-tree,2,7335,2744
+27000,Range tree,2,34,13
+27000,Brute force,2,27000,7402
+27000,KD-tree,2,7887,2870
+27000,Range tree,2,34,14
+81000,Brute force,2,81000,37041
+81000,KD-tree,2,11153,6105
+81000,Range tree,2,41,11
+81000,Brute force,2,81000,23162
+81000,KD-tree,2,12451,7139
+81000,Range tree,2,40,7
+81000,Brute force,2,81000,22027
+81000,KD-tree,2,14919,6211
+81000,Range tree,2,39,12
+81000,Brute force,2,81000,21542
+81000,KD-tree,2,21787,8721
+81000,Range tree,2,38,11

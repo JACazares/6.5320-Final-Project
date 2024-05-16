@@ -2,6 +2,10 @@ import pandas as pd
 
 import matplotlib.pyplot as plt
 
+test_type = "empty"
+d = 4
+
+prefix = f"{test_type}/benchmarks d={d}/"
 
 def build_time_plot(
     algorithm1,
@@ -264,12 +268,11 @@ def iterations_plot():
 
 
 if __name__ == "__main__":
-    d = 4
 
-    build_times = pd.read_csv(f"benchmarks d={d}/build_times.csv")
+    build_times = pd.read_csv(f"{prefix}build_times.csv")
 
     # Read the build_times and query_times csv files
-    query_times = pd.read_csv(f"benchmarks d={d}/query_times.csv")
+    query_times = pd.read_csv(f"{prefix}query_times.csv")
 
     # Calculate the sum of sorting time and build time
     build_times["Total Time (us)"] = (

@@ -41,7 +41,7 @@ vector<long long> kd_tree_build(kd_tree::KDNode* root)
     begin = std::chrono::steady_clock::now();
     for(int d = 0; d < num_dimensions; d++)
     {
-        sort(points_sorted[d].begin(), points_sorted[d].end(), [d](pair<Point, int> a, pair<Point, int> b) -> bool
+        sort(points_sorted[d].begin(), points_sorted[d].end(), [d](const pair<Point, int> a, const pair<Point, int> b) -> bool
         {
             return a.first.coordinates[d] < b.first.coordinates[d];
         });
@@ -68,8 +68,6 @@ vector<long long> kd_tree_query(const int brute_force, const Range search_range,
     end = std::chrono::steady_clock::now();
     auto kd_query_time = std::chrono::duration_cast<std::chrono::microseconds>(end - begin).count();
 
-    // cout << (int)ans.size() << " " << brute_force << "\n";
-
     assert((int)ans.size() == brute_force);
     return {kd_tree::kd_iterations, kd_query_time};
 }
@@ -81,7 +79,7 @@ vector<long long> range_tree_build(range_tree::RTNode* root)
 
     vector<Point> points_sorted = points;
     begin = std::chrono::steady_clock::now();
-    sort(points_sorted.begin(), points_sorted.end(), [](Point a, Point b) -> bool
+    sort(points_sorted.begin(), points_sorted.end(), [](const Point a, const Point b) -> bool
     {
         return a.coordinates[0] < b.coordinates[0];
     });
@@ -170,7 +168,8 @@ void query(Range search_range, const kd_tree::KDNode* kd_root, const range_tree:
 
 void full_test()
 {
-    prefix = "../results/benchmarks d=2/";
+    prefix = "../results/empty/benchmarks d=" + std::to_string(num_dimensions) + "/";
+
     std::random_device rd;
     std::mt19937 g(rd());
 
@@ -199,17 +198,19 @@ void full_test()
     else
         cout << "Failed to open build_times.csv\n";
 
-    N = 1e3;
+    N = (int)1e3;
     int lb = 2e2;
     int ub = 4e2;
 
-    while(N < (int)1e6)
+    while(N < (num_dimensions <= 2 ? (int)1e6 : (int)1e5))
     {
         vector<vector<double>> coordinates_available(num_dimensions, vector<double>(N, 0));
         for(int d = 0; d < num_dimensions; d++)
         {
-            for(int i = 0; i < N; i++)
+            for(int i = 0; i < N/2; i++)
                 coordinates_available[d][i] = i;
+            for(int i = N/2; i < N; i++)
+                coordinates_available[d][i] = N + i;
 
             std::shuffle(coordinates_available[d].begin(), coordinates_available[d].end(), g);
         }
@@ -231,15 +232,19 @@ void full_test()
         build(kd_root, rt_root);
 
         Range search_range;
-        search_range = Range(Point(vector<double>(num_dimensions, lb)), Point(vector<double>(num_dimensions, ub)));
+        search_range = Range(Point({(double)(N/2) + 1, 0, 0, 0}), Point({(double)(N/2) + 2, (double)N, (double)N, (double)N}));
         query(search_range, kd_root, rt_root);
 
-        search_range = Range(Point(vector<double>(num_dimensions, 2*lb)), Point(vector<double>(num_dimensions, (int)(1.5*ub))));
+        search_range = Range(Point({0, (double)(N/2) + 1, 0, 0}), Point({(double)N, (double)(N/2) + 2, (double)N, (double)N}));
+        query(search_range, kd_root, rt_root);
+
+        search_range = Range(Point({0, 0, (double)(N/2) + 1, 0}), Point({(double)N, (double)N, (double)(N/2) + 2, (double)N}));
+        query(search_range, kd_root, rt_root);
+
+        search_range = Range(Point({0, 0, 0, (double)(N/2) + 1}), Point({(double)N, (double)N, (double)N, (double)(N/2) + 2}));
         query(search_range, kd_root, rt_root);
 
         N *= 3;
-        lb *= 3;
-        ub *= 3;
     }
 }
 

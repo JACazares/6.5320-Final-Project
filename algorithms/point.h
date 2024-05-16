@@ -8,7 +8,7 @@
 using std::vector;
 
 const double INF = 1e9;
-const int num_dimensions = 2;
+const int num_dimensions = 4;
 
 struct Point
 {

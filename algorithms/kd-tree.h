@@ -61,6 +61,7 @@ namespace kd_tree
         vector<vector<pair<Point, int>>> right_child_points_sorted(num_dimensions, vector<pair<Point, int>>());
 
         unordered_map<int, bool> index_in_left;
+        index_in_left.clear();
 
         root -> left_child = new KDNode(root);
         root -> right_child = new KDNode(root);
@@ -99,14 +100,14 @@ namespace kd_tree
             // cout << "\n";
             here(0.5)
 
-            root -> left_child -> upper_bound.coordinates[d] = root -> split_coordinate;
-            root -> right_child -> lower_bound.coordinates[d] = root -> split_coordinate;
             here(0.5)
 
         }
 
         for(int i = 0; i < N/2; i++)
             index_in_left[points_sorted[current_coordinate_index][i].second] = 0;
+        root -> left_child -> upper_bound.coordinates[current_coordinate_index] = root -> split_coordinate;
+        root -> right_child -> lower_bound.coordinates[current_coordinate_index] = root -> split_coordinate;
 
         here(1);
         // for(int d = 0; d < num_dimensions; d++)
@@ -120,9 +121,9 @@ namespace kd_tree
         // cout << left_child_points_sorted.size() << "\n";
         // for(int d = 0; d < num_dimensions; d++)
         // {
-        //     cout << left_child_points_sorted[d].size() << ": ";
-        //     for(auto p : left_child_points_sorted[d])
-        //         cout << p.first << " ";
+        //     // cout << left_child_points_sorted[d].size() << ": ";
+        //     // for(auto p : left_child_points_sorted[d])
+        //     //     cout << p.first << " ";
         //     // for(int i = 0; i < N; i++)
         //     //     cout << left_child_points_sorted[d][i].first << " ";    
         //     cout << "\n";
@@ -151,14 +152,20 @@ namespace kd_tree
         
         if(root -> left_child == nullptr && root -> right_child == nullptr)
         {
+            // cout << " in " << root -> point << "\n";
             if(totally_contained(Range(root -> point, root -> point), search_range))
+            {
                 return vector<Point>({Point(root -> point)});
+            }
             else
                 return vector<Point>();
         }
 
         if(totally_outside(Range(root -> lower_bound, root -> upper_bound), search_range))
+        {
+            // cout << "out\n";
             return vector<Point>();
+        }
 
         vector<Point> left_child_points = search_kd_tree(search_range, root -> left_child);
         vector<Point> right_child_points = search_kd_tree(search_range, root -> right_child);
