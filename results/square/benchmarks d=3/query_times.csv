@@ -1,0 +1,31 @@
+N,Algorithm,Points,Iterations,Time (us)
+1000,Brute force,2,1000,264
+1000,KD-tree,2,37,14
+1000,Range tree,2,66,11
+1000,Brute force,10,1000,261
+1000,KD-tree,10,57,22
+1000,Range tree,10,107,24
+3000,Brute force,4,3000,925
+3000,KD-tree,4,51,23
+3000,Range tree,4,105,16
+3000,Brute force,24,3000,795
+3000,KD-tree,24,93,42
+3000,Range tree,24,201,36
+9000,Brute force,5,9000,2268
+9000,KD-tree,5,53,23
+9000,Range tree,5,156,34
+9000,Brute force,88,9000,2255
+9000,KD-tree,88,291,140
+9000,Range tree,88,398,99
+27000,Brute force,27,27000,7270
+27000,KD-tree,27,231,109
+27000,Range tree,27,290,71
+27000,Brute force,225,27000,6573
+27000,KD-tree,225,1115,525
+27000,Range tree,225,746,210
+81000,Brute force,111,81000,21844
+81000,KD-tree,111,435,285
+81000,Range tree,111,548,144
+81000,Brute force,658,81000,20523
+81000,KD-tree,658,2301,1239
+81000,Range tree,658,1719,561

@@ -168,7 +168,7 @@ void query(Range search_range, const kd_tree::KDNode* kd_root, const range_tree:
 
 void full_test()
 {
-    prefix = "../results/empty/benchmarks d=" + std::to_string(num_dimensions) + "/";
+    prefix = "../results/square/benchmarks d=" + std::to_string(num_dimensions) + "/";
 
     std::random_device rd;
     std::mt19937 g(rd());
@@ -208,9 +208,9 @@ void full_test()
         for(int d = 0; d < num_dimensions; d++)
         {
             for(int i = 0; i < N/2; i++)
-                coordinates_available[d][i] = i;
+                coordinates_available[d][i] = -i;
             for(int i = N/2; i < N; i++)
-                coordinates_available[d][i] = N + i;
+                coordinates_available[d][i] = N/2 + i;
 
             std::shuffle(coordinates_available[d].begin(), coordinates_available[d].end(), g);
         }
@@ -232,16 +232,10 @@ void full_test()
         build(kd_root, rt_root);
 
         Range search_range;
-        search_range = Range(Point({(double)(N/2) + 1, 0, 0, 0}), Point({(double)(N/2) + 2, (double)N, (double)N, (double)N}));
+        search_range = Range(Point(vector<double>(num_dimensions, -N/10)), Point(vector<double>(num_dimensions, N/10)));
         query(search_range, kd_root, rt_root);
 
-        search_range = Range(Point({0, (double)(N/2) + 1, 0, 0}), Point({(double)N, (double)(N/2) + 2, (double)N, (double)N}));
-        query(search_range, kd_root, rt_root);
-
-        search_range = Range(Point({0, 0, (double)(N/2) + 1, 0}), Point({(double)N, (double)N, (double)(N/2) + 2, (double)N}));
-        query(search_range, kd_root, rt_root);
-
-        search_range = Range(Point({0, 0, 0, (double)(N/2) + 1}), Point({(double)N, (double)N, (double)N, (double)(N/2) + 2}));
+        search_range = Range(Point(vector<double>(num_dimensions, -N/5)), Point(vector<double>(num_dimensions, N/5)));
         query(search_range, kd_root, rt_root);
 
         N *= 3;

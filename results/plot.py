@@ -2,7 +2,7 @@ import pandas as pd
 
 import matplotlib.pyplot as plt
 
-test_type = "empty"
+test_type = "square"
 d = 4
 
 prefix = f"{test_type}/benchmarks d={d}/"
